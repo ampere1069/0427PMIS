@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>PMIS 安全性檢查–成本效益分析與威脅分類</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+ <style>
+   /* ================= 1. 全局基礎設定 ================= */
+   * { box-sizing: border-box; margin: 0; padding: 0; }
+   html { scroll-behavior: smooth; }
+   body {
+    background-color: #0b0f19;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+   }
+ 
+   /* ================= 2. 強制字體覆蓋 (除了主標題區) ================= */
+   body *:not(.main-hero-banner):not(.main-hero-banner *) {
+    font-family: 'Noto Sans TC', sans-serif !important;
+    font-size: 30px !important;
+    font-weight: 700 !important; /* BOLD */
+    color: #ffffff !important;   /* 白色 */
+    line-height: 1.6 !important;
+    text-shadow: none !important;
+   }
+ 
+   /*恢復 FontAwesome Icon 的字體設定*/
+   body *:not(.main-hero-banner):not(.main-hero-banner *) i[class*="fa-"] {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+    font-weight: 900 !important;
+   }
+ 
+   /* ================= 3. 特別重要的關鍵詞 (紅色) ================= */
+   .important-keyword,
+   .important-keyword * {
+    color: #ef4444 !important;
+    font-weight: 900 !important;
+   }
+ 
+   /* ================= 4. 區塊佈局設定 ================= */
+   .page-section {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    position: relative;
+   }
+   #section-interactive {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-top: 2px solid #1e293b;
+    justify-content: flex-start;
+    padding-top: 60px;
+   }
+   .scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: bounce 2s infinite;
+    text-decoration: none;
+    z-index: 50;
+   }
+   @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+    40% { transform: translateY(-15px) translateX(-50%); }
+    60% { transform: translateY(-7px) translateX(-50%); }
+   }
+ 
+   /* ================= 5. 封面投影片樣式 ================= */
+   .slide-container {
+    width: 1500px;
+    height: auto;
+    background: linear-gradient(135deg, #0b0f19 0%, #1a1a2e 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px 40px 100px 40px;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    border-radius: 16px;
+   }
+   .slide-container::after {
+    content: '';
+    position: absolute;
+    bottom: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1000px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+   }
+ 
+   /* === 主標題橫幅區塊 === */
+   .main-hero-banner {
+    width: 100%;
+    height: 600px;
+    background-color: #0b0f19;
+    background-image: url('https://i.urusai.cc/FXbir.jpg');
+    background-size: contain;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    border-radius: 16px;
+    border: 2px solid #334155;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 30px;
+    z-index: 10;
+    position: relative;
+   }
+   .cover-title-wrapper { text-align: center; z-index: 10; }
+   .main-hero-banner h1 {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 64px; 
+    font-weight: 900;
+    color: #f8fafc;
+    margin-bottom: 15px;
+    text-shadow: 0px 4px 20px rgba(0, 0, 0, 0.9), 0px 0px 10px rgba(0,0,0,0.8);
+   }
+   .main-hero-banner p { 
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 32px; 
+    color: #cbd5e1; 
+    font-weight: 700; 
+    text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.9);
+   }
+ 
+   /* ================= 6. 容器適應大字體 ================= */
+   .hero-selection {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 40px;
+    width: 100%;
+    z-index: 10;
+   }
+   .hero-card {
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+    background: rgba(15, 23, 42, 0.7);
+    border: 2px solid #334155;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+   }
+   .hero-card.recommended {
+    max-width: 500px;
+    border: 3px solid #0ea5e9;
+    background: rgba(15, 23, 42, 0.9);
+    z-index: 20;
+   }
+   .hero-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; z-index: 5; }
+   .hero-card.tier-1::before { background: #64748b; }
+   .hero-card.tier-2::before { background: linear-gradient(90deg, #38bdf8, #8b5cf6); }
+   .hero-card.tier-3::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+   .hero-img { width: 100%; height: 300px; background: #000; position: relative; overflow: hidden; border-bottom: 2px solid #1e293b; }
+   .hero-card.recommended .hero-img { height: 340px; border-bottom-color: #0ea5e9; }
+   .hero-img img { width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0.9; }
+   .hero-info { padding: 25px 20px; display: flex; flex-direction: column; flex-grow: 1; text-align: center; gap: 15px; }
+   .cost-box { background: #0f172a; border-radius: 8px; padding: 15px; border: 1px solid #1e293b; display:flex; flex-direction:column; gap:10px; margin-top: auto;}
+   .hero-card.recommended .cost-box { border-color: #0ea5e9; background: rgba(14, 165, 233, 0.1); }
+   .status-tag { display: inline-block; padding: 10px; border-radius: 12px; border: 2px solid #334155; }
+   .badge { position: absolute; top: 25px; right: -65px; background: #0ea5e9; padding: 6px 60px; transform: rotate(45deg); box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; }
+    
+   /* 互動面板容器 */
+   .interactive-container { max-width: 1600px; width: 100%; display: flex; flex-direction: column; gap: 30px; }
+   .interactive-header { margin-bottom: 20px; text-align: center; }
+   .tabs-nav { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+   .tab-btn { background: rgba(15, 23, 42, 0.8); border: 2px solid #334155; padding: 18px 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+   .tab-btn.active { background: rgba(14, 165, 233, 0.3); border-color: #0ea5e9; }
+   .tab-content { display: none; animation: fadeIn 0.4s ease forwards; }
+   .tab-content.active { display: block; }
+   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+   /* 表格 */
+   .table-layout { width: 100%; background: rgba(15, 23, 42, 0.85); border-radius: 16px; overflow-x: auto; border: 2px solid #334155; }
+   table { width: 100%; border-collapse: collapse; min-width: 1400px; }
+   th, td { padding: 25px 20px; text-align: left; border-bottom: 1px solid #1e293b; vertical-align: middle;}
+   th { background-color: #0f172a; }
+   tr:hover td { background-color: rgba(255,255,255,0.05); }
+   td:nth-child(3), th:nth-child(3) { background-color: rgba(168, 85, 247, 0.08); border-left: 2px solid rgba(168, 85, 247, 0.4); border-right: 2px solid rgba(168, 85, 247, 0.4); }
+    
+   /* RPG 面板 */
+   .rpg-modal { width: 100%; background: linear-gradient(135deg, #13151a 0%, #08090b 100%); border: 2px solid #334155; border-radius: 16px; padding: 40px; display: grid; grid-template-columns: 1fr; gap: 40px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); position: relative; }
+   @media (min-width: 1400px) { .rpg-modal { grid-template-columns: 600px 1fr; } }
+   .rpg-modal.tier-1 { border-top: 6px solid #64748b; }
+   .rpg-modal.tier-2 { border-top: 6px solid #a855f7; }
+   .rpg-modal.tier-3 { border-top: 6px solid #eab308; }
+   .rpg-left-col { display: flex; flex-direction: column; gap: 25px; }
+   .rpg-portrait-large { width: 100%; height: 420px; border-radius: 12px; border: 3px solid #334155; background: #000; overflow: hidden; }
+   .rpg-portrait-large img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+   .rpg-char-header { text-align: center; background: rgba(15, 23, 42, 0.7); border: 2px solid #1e293b; border-radius: 10px; padding: 25px; display:flex; flex-direction:column; gap:10px;}
+   .rpg-exp-box { background: rgba(15, 23, 42, 0.8); padding: 20px; border-radius: 10px; border: 1px solid #1e293b; }
+   .rpg-exp-label { display: flex; justify-content: space-between; margin-bottom: 15px; }
+   .rpg-exp-bar { height: 30px; background: #0f172a; border: 2px solid #334155; border-radius: 15px; overflow: hidden; }
+   .rpg-exp-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #0ea5e9); }
+   .tier-2 .rpg-exp-fill { background: linear-gradient(90deg, #8b5cf6, #d946ef); }
+   .tier-3 .rpg-exp-fill { background: linear-gradient(90deg, #ef4444, #f97316); }
+   .rpg-cost-breakdown { background: rgba(0, 0, 0, 0.4); border: 2px solid #1e293b; border-radius: 10px; padding: 30px; }
+   .cost-bd-title { border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+   .cost-bd-list { display: flex; flex-direction: column; gap: 15px; }
+   .cost-bd-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 15px;}
+   .cost-bd-item:last-child { border-bottom: none; padding-bottom: 0; }
+    
+   /* 面板右側內容 */
+   .rpg-right-col { display: flex; flex-direction: column; gap: 30px; }
+   .rpg-panel { background: rgba(15, 23, 42, 0.6); border: 2px solid #1e293b; border-radius: 12px; padding: 35px; }
+   .rpg-panel-title { border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 25px; display: flex; align-items: center; gap: 15px; }
+   .rpg-equip-header { display: flex; align-items: flex-start; gap: 25px; }
+   .rpg-equip-icon { width: 80px; height: 80px; background: #0f172a; border: 2px solid #475569; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+   .rpg-equip-info { display: flex; flex-direction: column; gap: 10px; }
+   .rpg-attr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+   .attr-box { background: rgba(0, 0, 0, 0.5); padding: 25px 15px; border-radius: 8px; text-align: center; border: 2px solid #1e293b; display:flex; flex-direction:column; gap:10px;}
+   .rpg-quest-list { display: flex; flex-direction: column; gap: 25px; }
+   .rpg-quest-item { display: flex; align-items: flex-start; gap: 25px; background: rgba(15, 23, 42, 0.7); padding: 30px; border-radius: 8px; border: 2px solid #1e293b; border-left: 10px solid #475569; }
+   .quest-icon { width: 60px; height: 60px; background: #0f172a; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid #334155; }
+   .quest-content { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+   .quest-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+   .quest-tag { background: #000; padding: 8px 15px; border-radius: 6px; border: 2px solid #334155; }
+    
+   /* 收合文字方塊 */
+   .quest-details { margin-top: 15px; background: rgba(0, 0, 0, 0.4); border: 2px solid #334155; border-radius: 8px; overflow: hidden; }
+   .quest-details summary { padding: 20px 25px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.6); }
+   .quest-details summary::-webkit-details-marker { display: none; }
+   .quest-details summary::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; transition: transform 0.3s; }
+   .quest-details[open] summary::after { transform: rotate(180deg); }
+   .quest-details-content { padding: 30px; border-top: 2px solid #334155; background: rgba(15, 23, 42, 0.4); display: flex; flex-direction: column; gap: 15px;}
+    
+   /* 詳細成本文字方塊 */
+   .tier3-cost-box { margin-top: 20px; background: rgba(15, 23, 42, 0.8); border: 2px solid #334155; border-radius: 8px; padding: 30px; }
+   .tier3-cost-box > div { margin-bottom: 15px; }
+   .tier3-cost-list { display: flex; flex-direction: column; gap: 20px; }
+   .tier3-cost-item { background: rgba(0,0,0,0.4); padding: 25px; border-radius: 6px; border-left: 8px solid #334155; }
+   .tier3-cost-item span { display: block; margin-bottom: 10px; }
+    
+   /* CBA / Dashboard 專屬樣式 */
+   .cba-indicator { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+   .pmp-list { list-style: none; padding-left: 0; }
+   .pmp-list li { position: relative; padding-left: 45px; margin-bottom: 20px; }
+   .pmp-list li::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: 0; }
+   .text-formula { background: rgba(0,0,0,0.5); padding: 25px; border-radius: 8px; border: 2px solid #334155; }
+   .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-bottom: 30px; }
+   .dash-card { background: rgba(15, 23, 42, 0.8); border-radius: 12px; padding: 35px; display: flex; flex-direction: column; gap: 25px; border: 2px solid #334155; }
+   .dash-header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); }
+   .dash-metric { display: flex; justify-content: space-between; align-items: center; }
+   .dash-bcr-box { background: rgba(0,0,0,0.4); border-radius: 8px; padding: 30px; text-align: center; margin-top: auto; border: 2px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; gap:15px;}
+ 
+   /* ================= 總結分頁專屬樣式 (精簡版) ================= */
+   .red-box {
+    border: 3px solid #ef4444 !important; 
+    background: rgba(15, 23, 42, 0.6) !important; 
+    border-radius: 16px !important;
+    padding: 70px 40px 40px 40px !important;
+    position: relative;
+    margin-bottom: 70px !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3) !important;
+   }
+   .capsule-title {
+    position: absolute !important;
+    top: -35px !important;
+    left: 30px !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    padding: 15px 35px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.5) !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    z-index: 10;
+   }
+   .summary-grid { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 35px; 
+    margin-top: 10px;
+   }
+   .action-card { 
+    background: rgba(0, 0, 0, 0.4) !important; 
+    padding: 40px !important; 
+    border-left: 10px solid #ef4444 !important; 
+    border-radius: 12px !important; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; 
+   }
+   .action-card h3 {
+    margin-bottom: 25px !important;
+    color: #fca5a5 !important;
+   }
+   .action-card ul {
+    padding-left: 45px !important;
+    margin-top: 25px !important;
+   }
+   .action-card li {
+    margin-bottom: 20px !important;
+   }
+ </style>
+</head>
+<body>
+ <!-- ================= 區塊 1: 封面總覽 ================= -->
+ <section id="section-cover" class="page-section">
+ <div class="slide-container">
+    
+  <!-- 獨立主標題橫幅區塊 -->
+  <div class="main-hero-banner">
+    <div class="cover-title-wrapper">
+      <h1>PMIS安全性檢查 – <span>成本效益分析</span></h1>
+    </div>
+  </div>
+ 
+  <!-- 選項卡片 -->
+  <div class="hero-selection">
+    <!-- 選項 1 -->
+    <div class="hero-card tier-1">
+      <div class="hero-img">
+        <img src="https://i.urusai.cc/7uRW6.gif" alt="新手勇士" referrerpolicy="no-referrer">
+      </div>
+      <div class="hero-info">
+        <div class="tier-label">Lv.1 Novice</div>
+        <div class="hero-title">方案一：基本版</div>
+        <div class="cost-box">
+                <div class="cost-val">$0</div>
+                <div class="status-tag">
+                  <i class="fa-solid fa-xmark"></i> 
+                  <span class="important-keyword">高風險 / 不合規</span>
+                </div>
+        </div>
+      </div>
+    </div>
+    <!-- 選項 2 (推薦) -->
+    <div class="hero-card tier-2 recommended">
+      <div class="badge">推薦方案</div>
+      <div class="hero-img">
+        <img src="https://i.urusai.cc/Z1Kcc.gif" alt="菁英騎士" referrerpolicy="no-referrer">
+      </div>
+      <div class="hero-info">
+        <div class="tier-label">Lv.50 Elite Knight</div>
+        <div class="hero-title">方案二：合規加強版</div>
+        <div class="cost-box">
+                <div class="cost-val">約 $1,290,000</div>
+                <div class="status-tag">
+                  <i class="fa-solid fa-check"></i> 
+                  <span class="important-keyword">最佳平衡 / 符合標準</span>
+                </div>
+        </div>
+      </div>
+    </div>
+    <!-- 選項 3 -->
+    <div class="hero-card tier-3">
+      <div class="hero-img">
+        <img src="https://i.urusai.cc/SkoPI.gif" alt="傳說英雄" referrerpolicy="no-referrer">
+      </div>
+      <div class="hero-info">
+        <div class="tier-label">Lv.99 Legendary</div>
+        <div class="hero-title">方案三：高規防護版</div>
+        <div class="cost-box">
+                <div class="cost-val">約 $2,807,000 起</div>
+                <div class="status-tag">
+                  <i class="fa-solid fa-triangle-exclamation"></i> 
+                  <span class="important-keyword">預算偏高 / 邊際效益低</span>
+                </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ </div>
+  
+ <!-- 向下引導按鈕 -->
+ <a href="#section-interactive" class="scroll-indicator">
+  <i class="fa-solid fa-angles-down"></i>
+ </a>
+ </section>
+  
+ <!-- ================= 區塊 2: 互動式戰力面板 ================= -->
+ <section id="section-interactive" class="page-section">
+ <div class="interactive-container">
+  <header class="interactive-header">
+    <h1>PMIS安全性檢查 <span>成本效益分析</span></h1>
+    <p><span>點擊下方頁籤</span>進行互動探索。</p>
+  </header>
+    
+  <!-- 導覽頁籤 (已重新排序，並預設啟動魔王級威脅) -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-target="tab-bosses"><i class="fa-solid fa-skull"></i> 魔王級威脅分類</button>
+    <button class="tab-btn" data-target="tab-attack-script"><i class="fa-solid fa-route"></i> 三階段攻擊劇本</button>
+    <button class="tab-btn" data-target="tab-tier1"><i class="fa-solid fa-user-shield"></i> Lv.1 新手勇士</button>
+    <button class="tab-btn" data-target="tab-tier2"><i class="fa-solid fa-khanda"></i> Lv.50 菁英騎士</button>
+    <button class="tab-btn" data-target="tab-tier3"><i class="fa-solid fa-chess-knight"></i> Lv.99 傳說英雄</button>
+    <button class="tab-btn" data-target="tab-table"><i class="fa-solid fa-table"></i> 三方案對照總表</button>
+    <button class="tab-btn" data-target="tab-cba"><i class="fa-solid fa-chart-line"></i> 成本效益分析 (CBA)</button>
+    <button class="tab-btn" data-target="tab-summary"><i class="fa-solid fa-clipboard-check"></i> 總結</button>
+  </nav>
+ 
+  <!-- ================= 魔王級威脅分類 (現在為第一頁 active) ================= -->
+  <div id="tab-bosses" class="tab-content active">
+    <div class="rpg-modal" style="display: flex; flex-direction: column; width: 100%;">
+      <div class="rpg-char-header" style="border: 2px solid #ef4444; background: rgba(239, 68, 68, 0.1);">
+        <div class="rpg-char-name"><i class="fa-solid fa-biohazard"></i> PMIS 魔王級威脅分類</div>
+        <div class="rpg-char-title">系統潛在災難與嚴重弱點盤點</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 50px; margin-top: 20px;">
+        <!-- T1 災難級 -->
+        <div style="border: 2px solid #ef4444; border-radius: 16px; padding: 55px 35px 35px 35px; background: rgba(15, 23, 42, 0.6); position: relative;">
+          <h3 style="background: #ef4444; color: #ffffff !important; padding: 15px 35px; border-radius: 12px; position: absolute; top: -30px; left: 30px; box-shadow: 0 10px 20px rgba(239, 68, 68, 0.5); margin: 0; display: flex; align-items: center; gap: 15px; font-size: 34px !important;">
+            <i class="fa-solid fa-skull-crossbones"></i> T1 災難級 (Disaster)
+          </h3>
+          <div class="rpg-quest-list">
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-file-code"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">WebShell 後門上傳 RCE</span>
+                   <span class="quest-tag important-keyword">CVSS 9.8</span>
+                 </div>
+                 <div class="quest-desc">攻擊者將惡意程式偽裝成圖片上傳後可取得伺服器最高控制權。</div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-network-wired"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">SSL VPN / 遠端釣魚竊取帳密繞過外牆</span>
+                   <span class="quest-tag important-keyword">CVSS 9.5</span>
+                 </div>
+                 <div class="quest-desc">企業內網全面暴露，缺乏 2FA 保護時形同虛設。</div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-unlock-keyhole"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">帳號無限制暴力破解／撞庫攻擊</span>
+                   <span class="quest-tag important-keyword">CVSS 9.0</span>
+                 </div>
+                 <div class="quest-desc">任意 User 帳號均可能被攻陷，因無錯誤次數鎖定與密碼複雜度要求。</div>
+               </div>
+            </div>
+          </div>
+          <div style="margin-top: 30px; background: rgba(239, 68, 68, 0.1); border: 2px dashed #ef4444; border-radius: 8px; padding: 25px; display: flex; align-items: center; gap: 15px;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444 !important; font-size: 38px !important;"></i>
+            <span>觸發後果：以上任一觸發均可導致<span class="important-keyword">全系統淪陷</span>或<span class="important-keyword">重大資料外洩</span>，<span class="important-keyword">業務完全停擺</span>。</span>
+          </div>
+        </div>
+ 
+        <!-- T2 嚴重級 -->
+        <div style="border: 2px solid #f97316; border-radius: 16px; padding: 55px 35px 35px 35px; background: rgba(15, 23, 42, 0.6); position: relative;">
+          <h3 style="background: #f97316; color: #ffffff !important; padding: 15px 35px; border-radius: 12px; position: absolute; top: -30px; left: 30px; box-shadow: 0 10px 20px rgba(249, 115, 22, 0.5); margin: 0; display: flex; align-items: center; gap: 15px; font-size: 34px !important;">
+            <i class="fa-solid fa-radiation"></i> T2 嚴重級 (Severe)
+          </h3>
+          <div class="rpg-quest-list">
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-shield-virus"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">WAF 缺失導致 SQL Injection／XSS</span>
+                   <span class="quest-tag important-keyword">CVSS 8.5</span>
+                 </div>
+                 <div class="quest-desc">PMIS 全資料庫資料（專案、客戶、財務）可被完整外洩。</div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-server"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">Server OS 無 2FA + 無跳板機隔離</span>
+                   <span class="quest-tag important-keyword">CVSS 8.5</span>
+                 </div>
+                 <div class="quest-desc">攻擊者進入內網後可橫向移動逐台登入伺服器發動勒索攻擊。<span class="important-keyword">造成大量資料外洩或內網全面滲透。</span></div>
+               </div>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- T3 警告級 -->
+        <div style="border: 2px solid #eab308; border-radius: 16px; padding: 55px 35px 35px 35px; background: rgba(15, 23, 42, 0.6); position: relative;">
+          <h3 style="background: #eab308; color: #ffffff !important; padding: 15px 35px; border-radius: 12px; position: absolute; top: -30px; left: 30px; box-shadow: 0 10px 20px rgba(234, 179, 8, 0.5); margin: 0; display: flex; align-items: center; gap: 15px; font-size: 34px !important;">
+            <i class="fa-solid fa-triangle-exclamation"></i> T3 警告級 (Warning)
+          </h3>
+          <div class="rpg-quest-list">
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-user-ninja"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">Firewall Admin 無 2FA</span>
+                   <span class="quest-tag important-keyword">CVSS 8.0</span>
+                 </div>
+                 <div class="quest-desc">企業網路安全邊界防線失效，IPS／IDS 隨時面臨被關閉的風險。</div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">滲透測試／弱點掃描缺失</span>
+                   <span class="quest-tag important-keyword">CVSS 8.0</span>
+                 </div>
+                 <div class="quest-desc">入侵軌跡無法被偵測，攻擊者可<span class="important-keyword">長期潛伏</span>。</div>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ================= 三階段攻擊劇本 ================= -->
+  <div id="tab-attack-script" class="tab-content">
+    <div class="rpg-modal" style="display: flex; flex-direction: column; width: 100%;">
+      <div class="rpg-char-header" style="border: 2px solid #a855f7; background: rgba(168, 85, 247, 0.1);">
+        <div class="rpg-char-name"><i class="fa-solid fa-khanda"></i> 駭客入侵計畫—三階段攻擊劇本</div>
+        <div class="rpg-char-title">針對內部稽核 NG 項目的攻擊鏈模擬</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 50px; margin-top: 20px;">
+        <!-- 第一階段 -->
+        <div style="border: 2px solid #38bdf8; border-radius: 16px; padding: 55px 35px 35px 35px; background: rgba(15, 23, 42, 0.6); position: relative;">
+          <h3 style="background: #38bdf8; color: #ffffff !important; padding: 15px 35px; border-radius: 12px; position: absolute; top: -30px; left: 30px; box-shadow: 0 10px 20px rgba(56, 189, 248, 0.5); margin: 0; display: flex; align-items: center; gap: 15px; font-size: 34px !important;">
+            <i class="fa-solid fa-door-open"></i> 第一階段：從外部突破門戶（Initial Access）
+          </h3>
+          <div class="rpg-quest-list">
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-ghost"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 1：User密碼強制90天更改 (稽核NG)</span>
+                   <span class="quest-tag">殭屍密碼</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">殭屍密碼再利用</span>：攻擊者從暗網購買舊密碼，因無強制更換機制，仍可有效登入系統。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>使用者密碼無到期機制，舊密碼可能已在暗網流通，攻擊者可直接利用外洩帳密登入。
+                 </div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-unlock-keyhole"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 2：User密碼錯誤5次鎖定 (稽核NG)</span>
+                   <span class="quest-tag">撞庫攻擊</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">暴力破解／撞庫攻擊</span>：自動化腳本對登入介面不間斷嘗試，直到猜中密碼為止。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>無帳號鎖定機制，攻擊者可無限制嘗試密碼，自動化腳本可日以繼夜進行撞庫攻擊。
+                 </div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-rotate"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 3：密碼不可重複前8次 (稽核NG)</span>
+                   <span class="quest-tag">密碼循環</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">密碼循環攻擊</span>：即使強制換密碼，使用者改回舊密碼，攻擊者只需持有一份歷史密碼清單即可長期維持存取。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>使用者可循環使用舊密碼，導致密碼策略形同虛設。
+                 </div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-fish"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 7：SSL VPN / 遠端使用者 2FA (稽核NG)</span>
+                   <span class="quest-tag">釣魚入侵</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">釣魚攻擊直搗內網</span>：騙取遠端帳密後即可直連企業內網，內部資產暴露無遺。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>外部連線僅靠帳密防護，極易被釣魚攻擊或密碼外洩所利用。
+                 </div>
+               </div>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- 第二階段 -->
+        <div style="border: 2px solid #f97316; border-radius: 16px; padding: 55px 35px 35px 35px; background: rgba(15, 23, 42, 0.6); position: relative;">
+          <h3 style="background: #f97316; color: #ffffff !important; padding: 15px 35px; border-radius: 12px; position: absolute; top: -30px; left: 30px; box-shadow: 0 10px 20px rgba(249, 115, 22, 0.5); margin: 0; display: flex; align-items: center; gap: 15px; font-size: 34px !important;">
+            <i class="fa-solid fa-masks-theater"></i> 第二階段：瓦解應用層與偵測防禦（Evasion & Exploitation）
+          </h3>
+          <div class="rpg-quest-list">
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-database"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 8：佈署 WAF 防火牆 (稽核NG)</span>
+                   <span class="quest-tag">資料外洩</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">無過濾的應用層攻擊</span>：SQL Injection可直接打包下載整個資料庫；XSS可劫持使用者身份。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>無WAF防護代表Web伺服器直接暴露於攻擊，攻擊者可直接向資料庫注入惡意指令。
+                 </div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-user-ninja"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 9：每年第三方滲透測試 (稽核NG)</span>
+                   <span class="quest-tag">長期潛伏</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">零日/N-day漏洞潛伏</span>：無定期檢測代表未修補的漏洞可能已存在數月甚至數年。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>未定期進行滲透測試，等同處於盲人摸象，攻擊者可長期潛伏。
+                 </div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-robot"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 10：每年至少一次弱點掃描 (稽核NG)</span>
+                   <span class="quest-tag">自動化入侵</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">自動化漏洞利用</span>：攻擊者使用工具掃描對外IP，配合已知漏洞自動化入侵。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>未定期執行弱點掃描，新發現的漏洞無法及時被識別與修補。
+                 </div>
+               </div>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- 第三階段 -->
+        <div style="border: 2px solid #a855f7; border-radius: 16px; padding: 55px 35px 35px 35px; background: rgba(15, 23, 42, 0.6); position: relative;">
+          <h3 style="background: #a855f7; color: #ffffff !important; padding: 15px 35px; border-radius: 12px; position: absolute; top: -30px; left: 30px; box-shadow: 0 10px 20px rgba(168, 85, 247, 0.5); margin: 0; display: flex; align-items: center; gap: 15px; font-size: 34px !important;">
+            <i class="fa-solid fa-crown"></i> 第三階段：奪取最高控制權與毀滅性打擊
+          </h3>
+          <div class="rpg-quest-list">
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-infinity"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 11：Server OS密碼防重複 (稽核NG)</span>
+                   <span class="quest-tag">持久控制</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">持久控制（Persistence）</span>：管理員慣性回復舊密碼，攻擊者維持長期潛伏。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>Server管理帳號允許重複舊密碼，使密碼輪換的安全效果失效。
+                 </div>
+               </div>
+            </div>
+            <div class="rpg-quest-item">
+               <div class="quest-icon"><i class="fa-solid fa-biohazard"></i></div>
+               <div class="quest-content">
+                 <div class="quest-header">
+                   <span class="quest-name">項次 13：一年一次災難復原演練 (稽核NG)</span>
+                   <span class="quest-tag">勒索加密與停擺</span>
+                 </div>
+                 <div class="quest-desc">
+                   <span>【攻擊手法】<span class="important-keyword">橫向移動 + 勒索攻擊</span>：攻擊者進入內網後，逐台加密核心資料庫與應用伺服器。</span><br>
+                   <span class="important-keyword">【弱點根因】</span>系統雖具備完整的 7 天備份，但缺乏定期的 DR 災難復原演練。一旦底層被勒索加密，將無法及時恢復服務。
+                 </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- 分頁內容: Tier 1 -->
+  <div id="tab-tier1" class="tab-content">
+    <div class="rpg-modal tier-1">
+      <div class="rpg-left-col">
+        <div class="rpg-portrait-large">
+                <img src="https://i.urusai.cc/7uRW6.gif" alt="Lv 1 Novice Warrior" referrerpolicy="no-referrer">
+        </div>
+        <div class="rpg-char-header">
+                <div class="rpg-char-name">Lv.1新手勇士</div>
+                <div class="rpg-char-title">[方案 1] 基本版最低安全保護模式</div>
+        </div>
+        <div class="rpg-exp-box">
+                <div class="rpg-exp-label"><span>EXP (總預算消耗)</span> <span>$0 / $1.29M</span></div>
+                <div class="rpg-exp-bar"><div class="rpg-exp-fill" style="width: 0%;"></div></div>
+        </div>
+        <!-- 詳細成本結構分析 -->
+        <div class="rpg-cost-breakdown">
+                <div class="cost-bd-title"><i class="fa-solid fa-coins"></i> 詳細成本結構分析</div>
+                <div class="cost-bd-list">
+                  <div class="cost-bd-item"><span>無編列任何資安升級預算</span><span class="price">$0</span></div>
+                  <div class="cost-bd-item"><span>* 依賴合約既有基礎防禦與現有資料庫定時備份，面對新型進階威脅其「增量防禦效益」為0。</span></div>
+                </div>
+        </div>
+      </div>
+      <!-- 右側 -->
+      <div class="rpg-right-col">
+        <div class="rpg-panel">
+                <div class="rpg-panel-title"><i class="fa-solid fa-khanda"></i> 當前裝備狀態</div>
+                <div class="rpg-equip-header">
+                  <div class="rpg-equip-icon"><i class="fa-solid fa-shirt"></i></div>
+                  <div class="rpg-equip-info">
+                    <h4>普通：基本的盔甲與鐵劍</h4>
+                    <p>具備合約交付之基礎防線與 <span>完善的 SQL Server 資料庫備份 (保留7天) 及索引維護機制</span>，但不編列升級預算，難以抵擋進階攻擊。</p>
+                  </div>
+                </div>
+        </div>
+        <div class="rpg-panel">
+                <div class="rpg-attr-grid">
+                  <div class="attr-box">
+                    <div class="attr-label">P.DEF (物理防禦)</div>
+                    <div class="attr-value">+10</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">M.DEF (魔法防禦)</div>
+                    <div class="attr-value">+5</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">防禦覆蓋率</div>
+                    <div class="attr-value">約 50%</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">綜合評價</div>
+                    <div class="attr-value important-keyword">不合規</div>
+                  </div>
+                </div>
+        </div>
+        <div class="rpg-panel" style="flex-grow: 1;">
+                <div class="rpg-panel-title"><i class="fa-solid fa-list-check"></i> 稽核任務清單 (Quest Log)</div>
+                <div class="rpg-quest-list">
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-database"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">資料庫備份與索引維護</span><span class="quest-tag important-keyword">Pass</span></div>
+                      <div class="quest-desc">已具備完整/差異/交易紀錄備份(保留7天)及自動索引重組，符合稽核要求。</div>
+                    </div>
+                  </div>
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-xmark"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">弱點掃描 & 滲透測試</span><span class="quest-tag">被動</span></div>
+                      <div class="quest-desc">無執行 (僅靠系統更新，無法發現潛在架構弱點)</div>
+                    </div>
+                  </div>
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-exclamation"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">身份驗證與密碼政策</span><span class="quest-tag">脆弱</span></div>
+                      <div class="quest-desc">基本帳密無鎖定機制與防重複檢查 <span class="important-keyword">(極易遭撞庫攻擊與密碼循環)</span></div>
+                      <details class="quest-details">
+                        <summary>查看防禦弱點詳情</summary>
+                        <div class="quest-details-content">
+                         <span><strong>基本帳密 (合約基礎身分驗證)</strong>提供系統最基礎的登入存取控制。然而防線脆弱，缺雙重驗證、密碼錯5次鎖定、90天強制更換與防前8次重複，導致帳號易遭釣魚與暴力破解。</span>
+                         <span><strong>基本副檔名檢查 (合約基礎檔案防禦)</strong>僅單純依靠字面上的副檔名來決定是否放行，駭客易偽裝檔案闖關(WebShell)。</span>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-xmark"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">最終稽核判定</span><span class="quest-tag">狀態</span></div>
+                      <div class="quest-desc important-keyword">缺失 (無法通過內部稽核查檢表要求)</div>
+                    </div>
+                  </div>
+                </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- 分頁內容: Tier 2 -->
+  <div id="tab-tier2" class="tab-content">
+    <div class="rpg-modal tier-2">
+      <div class="rpg-left-col">
+        <div class="rpg-portrait-large">
+                <img src="https://i.urusai.cc/Z1Kcc.gif" alt="Lv 50 Elite Knight" referrerpolicy="no-referrer">
+        </div>
+        <div class="rpg-char-header">
+                <div class="rpg-char-name">Lv.50菁英合規騎士</div>
+                <div class="rpg-char-title">[方案 2] 技術底線與高 CP 值</div>
+        </div>
+        <div class="rpg-exp-box">
+                <div class="rpg-exp-label"><span>EXP (總預算消耗)</span> <span>$1.29M / $1.29M</span></div>
+                <div class="rpg-exp-bar"><div class="rpg-exp-fill" style="width: 100%;"></div></div>
+        </div>
+        <!-- 詳細成本結構分析 -->
+        <div class="rpg-cost-breakdown">
+                <div class="cost-bd-title"><i class="fa-solid fa-file-invoice-dollar"></i>詳細成本結構分析</div>
+                <div class="cost-bd-list">
+                  <div class="cost-bd-item"><span>A-1:綜合資安檢測總包(含滲透/弱掃)</span><span class="price">$1,065,000</span></div>
+                  <div class="cost-bd-item"><span>A-2:客製化程式密碼與防禦優化</span><span class="price">$225,000</span></div>
+                </div>
+        </div>
+      </div>
+      <div class="rpg-right-col">
+        <div class="rpg-panel">
+                <div class="rpg-panel-title"><i class="fa-solid fa-khanda"></i> 當前裝備狀態</div>
+                <div class="rpg-equip-header">
+                  <div class="rpg-equip-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                  <div class="rpg-equip-info">
+                    <h4>史積：合規防禦壁壘</h4>
+                    <p>這筆約 129 萬的預算是確保系統能補足密碼政策與檢測頻率，通過內部稽核底線的核心費用。</p>
+                  </div>
+                </div>
+        </div>
+        <div class="rpg-panel">
+                <div class="rpg-attr-grid">
+                  <div class="attr-box">
+                    <div class="attr-label">P.DEF (物理防禦)</div>
+                    <div class="attr-value">+6800</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">M.DEF (魔法防禦)</div>
+                    <div class="attr-value">+5900</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">防禦覆蓋率</div>
+                    <div class="attr-value">約 75%</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">綜合評價</div>
+                    <div class="attr-value important-keyword">符合標準</div>
+                  </div>
+                </div>
+        </div>
+        <div class="rpg-panel" style="flex-grow: 1;">
+                <div class="rpg-panel-title"><i class="fa-solid fa-list-check"></i> 稽核任務清單 (Quest Log)</div>
+                <div class="rpg-quest-list">
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">弱點掃描 & 滲透測試</span><span class="quest-tag">主動</span></div>
+                      <div class="quest-desc"><span class="important-keyword">包含三條線自動化弱掃與黑灰箱滲透測試</span>，找第三方驗證單位，取得精準合規預算。</div>
+                    </div>
+                  </div>
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">系統破口修補與密碼優化</span><span class="quest-tag">防禦</span></div>
+                      <div class="quest-desc">配合邏輯修改，並 <span class="important-keyword">整合 90天更改、錯5次鎖定與不重複機制 (A-2)</span>。</div>
+                      <details class="quest-details">
+                        <summary>查看防禦機制詳情</summary>
+                        <div class="quest-details-content">
+                         <span><strong>A-2 客製化程式優化</strong><br>
+                          修補 PMIS 破口，確保密碼不能重複前8次使用，同步導入密碼最少8字元複雜度及錯5次鎖定15分鐘機制，並結合 MIME Type 檔案防禦邏輯，有效滿足稽核要求。</span>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">最終稽核判定</span><span class="quest-tag">狀態</span></div>
+                      <div class="quest-desc important-keyword">PASS 合格 (屬於順利通過稽核之最低必要花費)</div>
+                    </div>
+                  </div>
+                </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- 分頁內容: Tier 3 -->
+  <div id="tab-tier3" class="tab-content">
+    <div class="rpg-modal tier-3">
+      <div class="rpg-left-col">
+        <div class="rpg-portrait-large">
+                <img src="https://i.urusai.cc/SkoPI.gif" alt="Lv 99 Legendary Hero" referrerpolicy="no-referrer">
+        </div>
+        <div class="rpg-char-header">
+                <div class="rpg-char-name">Lv.99傳說頂規英雄</div>
+                <div class="rpg-char-title">[方案 3] 硬體與進階授權擴充</div>
+        </div>
+        <div class="rpg-exp-box">
+                <div class="rpg-exp-label"><span>EXP (總預算消耗)</span> <span>$2.80M / OVERFLOW</span></div>
+                <div class="rpg-exp-bar">
+                  <div class="rpg-exp-fill" style="width: 100%;"></div>
+                </div>
+        </div>
+        <!-- 詳細成本結構分析 -->
+        <div class="rpg-cost-breakdown">
+                <div class="cost-bd-title"><i class="fa-solid fa-sack-dollar"></i> 詳細成本結構分析</div>
+                <div class="cost-bd-list">
+                  <div class="cost-bd-item"><span>A區塊: 方案二合規防護基礎</span><span class="price">$1,290,000</span></div>
+                  <div class="cost-bd-item"><span>B-1:外部 VPN 與 遠端 2FA</span><span class="price">$60,000</span></div>
+                  <div class="cost-bd-item"><span>B-2:佈署 WAF 防火牆</span><span class="price">$1,000,000 起</span></div>
+                  <div class="cost-bd-item"><span>B-3:一年一次 DR 災難復原演練</span><span class="price">$360,000</span></div>
+                  <div class="cost-bd-item"><span>B-4:專用維護電腦含EDR防毒</span><span class="price">$97,000</span></div>
+                  <div class="tier3-cost-box">
+                    <div class="cost-total">總費用預估：約 2,807,000 元起。</div>
+                    <div class="cost-subtitle">詳細成本結構與建議：</div>
+                    <div class="tier3-cost-list">
+                      <div class="tier3-cost-item">
+                        <span>1. 方案二合規防護基礎 (1,290,000元)：<br>包含年度弱掃、滲透測試及密碼/鎖定/上傳程式優化，確保滿足內部稽核底線。</span>
+                      </div>
+                      <div class="tier3-cost-item">
+                        <span>2. 進階硬體/演練與授權擴充 (1,517,000元起)：<br>包含擴充現有遠端連線之 2FA 授權 (B-1)，採購獨立的 FortiWeb 防火牆 (B-2)，並安排每年 DR 演練 (B-3) 與專用維護電腦 (B-4)。<br><span class="important-keyword">謹慎評估：</span>由於此屬高階硬體設備與演練服務，原始合約並無此規劃，邊際防禦效益遞減，需謹慎評估。</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        </div>
+      </div>
+      <div class="rpg-right-col">
+        <div class="rpg-panel">
+                <div class="rpg-panel-title"><i class="fa-solid fa-khanda"></i> 當前裝備狀態</div>
+                <div class="rpg-equip-header">
+                  <div class="rpg-equip-icon"><i class="fa-solid fa-chess-rook"></i></div>
+                  <div class="rpg-equip-info">
+                    <h4>神話：絕對防禦結界</h4>
+                    <p>結合最佳效益的常態檢測方案，並疊加百萬級獨立硬體與常態演練，確保應用層攻擊與實體漏洞被物理阻斷。</p>
+                  </div>
+                </div>
+        </div>
+        <div class="rpg-panel">
+                <div class="rpg-attr-grid">
+                  <div class="attr-box">
+                    <div class="attr-label">P.DEF (物理防禦)</div>
+                    <div class="attr-value">+9999</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">M.DEF (魔法防禦)</div>
+                    <div class="attr-value">+9999</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">防禦覆蓋率</div>
+                    <div class="attr-value">達 95%</div>
+                  </div>
+                  <div class="attr-box">
+                    <div class="attr-label">綜合評價</div>
+                    <div class="attr-value important-keyword">謹慎評估</div>
+                  </div>
+                </div>
+        </div>
+        <div class="rpg-panel" style="flex-grow: 1;">
+                <div class="rpg-panel-title"><i class="fa-solid fa-list-check"></i> 稽核任務清單 (Quest Log)</div>
+                <div class="rpg-quest-list">
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-star"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">弱點掃描 & 滲透測試</span><span class="quest-tag">主動</span></div>
+                      <div class="quest-desc">頻率為 <span class="important-keyword">一年一次</span>，維持合理合規。</div>
+                    </div>
+                  </div>
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-star"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">最高規防禦設施與演練</span><span class="quest-tag">防禦</span></div>
+                      <div class="quest-desc">方案二全套保護 + 遠端 2FA + 百萬級 WAF + DR演練 + 專用電腦。</div>
+                      <details class="quest-details">
+                        <summary>查看防禦設施詳情</summary>
+                        <div class="quest-details-content">
+                         <span><strong>B-1 外部 VPN/遠端 雙重驗證 (2FA)</strong> <br>擴充現有連線授權，補足遠端連線防線。</span>
+                         <span><strong>B-2 網頁應用程式防火牆 (WAF)</strong> <br>採購獨立的 FortiWeb 設備以防護 Web 攻擊。</span>
+                         <span><strong>B-3 DR災難復原演練與 B-4 專用設備</strong> <br>實施三服務三條線的一年一次還原演練，並採購搭載 TPM2.0 晶片與 EDR 之專用維護電腦，杜絕實體破口。</span>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                  <div class="rpg-quest-item">
+                    <div class="quest-icon"><i class="fa-solid fa-handshake"></i></div>
+                    <div class="quest-content">
+                      <div class="quest-header"><span class="quest-name">最終方案評選</span><span class="quest-tag">策略</span></div>
+                      <div class="quest-desc important-keyword">總計約 280.7 萬，建議謹慎評估成本效益比。</div>
+                    </div>
+                  </div>
+                </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- 分頁內容: 總表 -->
+  <div id="tab-table" class="tab-content">
+    <div class="table-layout">
+      <table>
+        <thead>
+                <tr>
+                  <th>比較項目</th>
+                  <th>方案 1：基本版</th>
+                  <th>方案 2：合規加強版 (推薦)</th>
+                  <th>方案 3：高規防護版</th>
+                </tr>
+        </thead>
+        <tbody>
+                <tr>
+                  <td><span>預估總費用 (年)</span></td>
+                  <td class="table-price price-tier1">$0 元</td>
+                  <td class="table-price price-tier2">$1,290,000 元</td>
+                  <td class="table-price price-tier3">約 $2,807,000 元起</td>
+                </tr>
+                <tr>
+                  <td><span>資料庫防護與備份機制</span></td>
+                  <td><span>具備 (完整/差異/TLog備份保留7天，每週自動索引維護)</span></td>
+                  <td><span>具備 (同方案一)</span></td>
+                  <td><span>具備 (同方案一)</span></td>
+                </tr>
+                <tr>
+                  <td><span>檢測頻率 (弱掃)</span></td>
+                  <td>無新增 (僅依賴系統更新)</td>
+                  <td>一年一次 (涵蓋三條線，約 $31.5萬)</td>
+                  <td>一年一次 (涵蓋三條線，約 $31.5萬)</td>
+                </tr>
+                <tr>
+                  <td><span>檢測頻率 (滲透)</span></td>
+                  <td>無新增</td>
+                  <td>一年一次 (黑/灰箱，約 $75萬)</td>
+                  <td>一年一次 (黑/灰箱，約 $75萬)</td>
+                </tr>
+                <tr>
+                  <td><span>身份驗證與密碼政策優化</span></td>
+                  <td>合約既有帳密 (無限制)</td>
+                  <td><span class="important-keyword">90天更改、8碼複雜度、錯5次鎖定、防重複前8次 (約 $22.5萬)</span></td>
+                  <td><span class="important-keyword">方案二全包</span> + 外部 VPN 遠端連線 2FA ($6萬)</td>
+                </tr>
+                <tr>
+                  <td><span>檔案上傳防禦</span></td>
+                  <td>合約既有副檔名檢查</td>
+                  <td><span class="important-keyword">MIME Type 真實格式邏輯</span></td>
+                  <td><span class="important-keyword">MIME Type 真實格式邏輯</span></td>
+                </tr>
+                <tr>
+                  <td><span>災難復原演練與實體設備</span></td>
+                  <td>無</td>
+                  <td>無</td>
+                  <td><span class="important-keyword">一年一次DR演練($36萬) + 專用維護電腦+EDR($9.7萬) + 實體WAF($100萬起)</span></td>
+                </tr>
+                <tr>
+                  <td><span>合規性結算 (內部稽核)</span></td>
+                  <td><span class="important-keyword">不符合 (面臨多項稽核缺失)</span></td>
+                  <td><span class="important-keyword">符合 (通過內部稽核底線)</span></td>
+                  <td><span class="important-keyword">優於標準 (成本極高)</span></td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+ 
+  <!-- ================= 成本效益分析 (CBA) ================= -->
+  <div id="tab-cba" class="tab-content">
+    <div class="rpg-modal" style="display: flex; flex-direction: column; width: 100%;">
+      <div class="rpg-char-header">
+        <div class="rpg-char-name"><i class="fa-solid fa-chart-line"></i> 成本效益分析 (CBA)</div>
+        <div class="rpg-char-title">量化各方案之 NPV 與 BCR 指標</div>
+      </div>
+      <!-- 計算方法說明 -->
+      <div style="display: grid; grid-template-columns: 1fr; gap: 30px; margin-bottom: 40px;">
+        <!-- 計算方法與公式 -->
+        <div class="rpg-panel">
+                <div class="rpg-panel-title"><i class="fa-solid fa-calculator"></i> 核心計算方法與公式</div>
+                <div style="margin-bottom: 25px;">
+                  <div>1. 效益成本比 (BCR)</div>
+                  <div style="margin-bottom: 15px;">評估投入每 1 元能帶來多少效益。若 BCR > 1代表專案可行。</div>
+                  <div class="text-formula">BCR = 預期效益現值 (PV benefits) / 成本現值 (PV costs)</div>
+                </div>
+                <div>
+                  <div>2. 淨現值 (NPV)</div>
+                  <div style="margin-bottom: 15px;">衡量投資的總淨價值。若 NPV > 0 表示具備實質正效益。(計算以1年期基準)</div>
+                  <div class="text-formula">NPV = 預期效益現值 - 成本現值</div>
+                </div>
+        </div>
+      </div>
+      <!-- 儀表板總覽 -->
+      <div class="rpg-panel" style="margin-bottom: 40px;">
+        <h3 class="rpg-panel-title"><i class="fa-solid fa-gauge-high"></i> 決策儀表板 (CBA Dashboard)</h3>
+        <div class="dashboard-grid">
+                <!-- Tier 1 -->
+                <div class="dash-card tier-1">
+                  <div class="dash-header">方案一 (基本版)</div>
+                  <div class="dash-metric"><span>成本現值 (Cost)</span> <span class="dash-value">$0</span></div>
+                  <div class="dash-metric"><span>效益現值 (Benefit)</span> <span class="dash-value">$0</span></div>
+                  <div class="dash-metric"><span>淨現值 (NPV)</span> <span class="dash-value important-keyword">極大負值</span></div>
+                  <div class="dash-bcr-box">
+                    <div class="dash-bcr-title">BCR 指標</div>
+                    <div class="dash-bcr-value important-keyword">&lt; 1.0</div>
+                    <div class="important-keyword" style="margin-top: 15px;"><i class="fa-solid fa-ban"></i> 拒絕接受</div>
+                  </div>
+                </div>
+                <!-- Tier 2 -->
+                <div class="dash-card tier-2">
+                  <div class="dash-header">方案二 (加強版)</div>
+                  <div class="dash-metric"><span>成本現值 (Cost)</span> <span class="dash-value">$129.0萬</span></div>
+                  <div class="dash-metric"><span>效益現值 (Benefit)</span> <span class="dash-value">$178.0萬</span></div>
+                  <div class="dash-metric"><span>淨現值 (NPV)</span> <span class="dash-value important-keyword">+$49.0萬</span></div>
+                  <div class="dash-bcr-box">
+                    <div class="dash-bcr-title">BCR 指標</div>
+                    <div class="dash-bcr-value important-keyword">1.38</div>
+                    <div class="important-keyword" style="margin-top: 15px;"><i class="fa-solid fa-crown"></i> 最佳決策</div>
+                  </div>
+                </div>
+                <!-- Tier 3 -->
+                <div class="dash-card tier-3">
+                  <div class="dash-header">方案三 (高規版)</div>
+                  <div class="dash-metric"><span>成本現值 (Cost)</span> <span class="dash-value">$280.7萬</span></div>
+                  <div class="dash-metric"><span>效益現值 (Benefit)</span> <span class="dash-value">$178.0萬</span></div>
+                  <div class="dash-metric"><span>淨現值 (NPV)</span> <span class="dash-value important-keyword">-$102.7萬</span></div>
+                  <div class="dash-bcr-box">
+                    <div class="dash-bcr-title">BCR 指標</div>
+                    <div class="dash-bcr-value important-keyword">0.63</div>
+                    <div class="important-keyword" style="margin-top: 15px;"><i class="fa-solid fa-triangle-exclamation"></i> 嚴重虧損</div>
+                  </div>
+                </div>
+        </div>
+      </div>
+      <!-- 三方案 NPV 與 BCR 量化計算對照表 -->
+      <div class="rpg-panel cba-table-container" style="padding: 0;">
+        <div style="padding: 25px 30px; background: #0f172a; border-bottom: 2px solid #334155;">
+                <h3 class="rpg-panel-title" style="margin: 0; border: none; padding: 0;"><i class="fa-solid fa-table-list"></i> 三方案詳細量化計算對照表</h3>
+        </div>
+        <table>
+                <thead>
+                  <tr>
+                    <th>方案</th>
+                    <th>成本現值<br>(PV Costs)</th>
+                    <th>預期效益現值 (PV Benefits) 與參數</th>
+                    <th>NPV 淨現值</th>
+                    <th>BCR 指標</th>
+                    <th>專案決策結論</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Tier 1 -->
+                  <tr>
+                    <td>方案一<br><span>(基本版)</span></td>
+                    <td>$0 萬</td>
+                    <td>
+                      <span class="important-keyword" style="display: block; margin-bottom: 10px;">新增效益 $0 萬 (增量分析)</span>
+                      <span>雖具備合約既有防禦與資料庫定時備份，但在面對新型勒索攻擊與稽核標準下，無法提供額外效益。龐大的風險期望值導致極大負現值。</span>
+                    </td>
+                    <td>
+                      (0 - 0)<br><span class="important-keyword" style="display: block; margin-top: 10px;">極大負值</span><br><span>(由 EMV 造成)</span>
+                    </td>
+                    <td>
+                      <span class="important-keyword">&lt; 1</span><br><span>(趨近於 0)</span>
+                    </td>
+                    <td>
+                      最危險決策<br><i class="fa-solid fa-ban important-keyword" style="margin-top: 10px;"></i>
+                    </td>
+                  </tr>
+                  <!-- Tier 2 -->
+                  <tr>
+                    <td>方案二<br><span>(合規加強版)</span></td>
+                    <td>$129.0 萬</td>
+                    <td>
+                      <span class="important-keyword" style="display: block; margin-bottom: 12px;">約 $178 萬</span>
+                      <span>避免常態檢測維護等可能耗損的潛在風險期望費用 ($178萬)，以最適當之預算通過內部稽核標準。</span>
+                    </td>
+                    <td>
+                      (178 - 129)<br><span class="important-keyword" style="display: block; margin-top: 10px;">+$49.0 萬</span>
+                    </td>
+                    <td>
+                      (178 / 129)<br><span class="important-keyword" style="display: block; margin-top: 10px;">1.38</span>
+                    </td>
+                    <td>
+                      <span class="important-keyword">最佳解<br>支持啟動</span><br><i class="fa-solid fa-crown important-keyword" style="margin-top: 10px;"></i>
+                    </td>
+                  </tr>
+                  <!-- Tier 3 -->
+                  <tr>
+                    <td>方案三<br><span>(高規防護版)</span></td>
+                    <td>$280.7 萬</td>
+                    <td>
+                      <span class="important-keyword" style="display: block; margin-bottom: 10px;">約 $178 萬</span>
+                      <span><span class="important-keyword">* 成本遠高於效益。</span>雖然加入了高額的 WAF 與 DR 演練等，防禦力達極限，但其額外增加的龐大硬體與演練投資將導致 NPV 呈現嚴重負值，高額成本無法回收。</span>
+                    </td>
+                    <td>
+                      (178 - 280.7)<br><span class="important-keyword" style="display: block; margin-top: 10px;">-$102.7 萬</span>
+                    </td>
+                    <td>
+                      (178 / 280.7)<br><span class="important-keyword" style="display: block; margin-top: 10px;">0.63</span>
+                    </td>
+                    <td>
+                      <span class="important-keyword">嚴重虧損<br>拒絕接受</span><br><i class="fa-solid fa-ban important-keyword" style="margin-top: 10px;"></i>
+                    </td>
+                  </tr>
+                </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- ================= 成本效益分析 (CBA) 結束 ================= -->
+ 
+  <!-- ================= 總結分頁 ================= -->
+  <div id="tab-summary" class="tab-content">
+     <div class="rpg-modal" style="display: flex; flex-direction: column; width: 100%;">
+         <!-- 底部：總結 -->
+         <div class="red-box">
+              <h2 class="capsule-title"><i class="fa-solid fa-clipboard-check"></i> 總結與管理階層行動方案</h2>
+              <div class="summary-grid">
+                  <div class="action-card">
+                      <h3>1. 整體風險態勢 (Risk Posture)</h3>
+                      <p>系統基礎架構與備份機制健全 (符合 ISO 27001 A.12)。但應用層存取控制與防禦機制存在嚴重缺失，易受撞庫與 WebShell 攻擊，面臨稽核不通過及商譽受損風險。</p>
+                  </div>
+                  <div class="action-card">
+                      <h3>2. CBA 決策建議 (Risk Treatment)</h3>
+                      <p>依據 ISO 31000 風險處理原則，強烈建議採納「方案二：合規加強版」。其投入約 129 萬，不僅能補齊密碼政策、MIME Type 驗證及主動弱掃/滲透測試，且 BCR 高達 1.38，為預算與安全之最佳平衡。</p>
+                  </div>
+                  <div class="action-card">
+                      <h3>3. 立即修補事項 (Immediate Actions)</h3>
+                      <ul>
+                          <li>啟動密碼政策客製化修改 (預算編列: $225,000)。</li>
+                          <li>排定第三方驗證單位執行源碼、弱掃與滲透測試 (總包)。</li>
+                          <li>檢討是否需增編每年一次的 DR 災難復原演練 (建議評估)。</li>
+                      </ul>
+                  </div>
+              </div>
+         </div>
+     </div>
+  </div>
+  <!-- ================= 總結分頁結束 ================= -->
+ 
+ </div>
+ </section>
+  
+ <script>
+   // Tab 切換邏輯
+ document.addEventListener('DOMContentLoaded', () => {
+   const tabBtns = document.querySelectorAll('.tab-btn');
+   const tabContents = document.querySelectorAll('.tab-content');
+     
+   tabBtns.forEach(btn => {
+     btn.addEventListener('click', () => {
+       // 移除所有 active class
+       tabBtns.forEach(b => b.classList.remove('active'));
+       tabContents.forEach(c => c.classList.remove('active'));
+       
+       // 為點擊的按鈕加入 active
+       btn.classList.add('active');
+       
+       // 顯示對應的內容
+       const targetId = btn.getAttribute('data-target');
+       document.getElementById(targetId).classList.add('active');
+     });
+   });
+  });
+ </script>
+</body>
+</html>
